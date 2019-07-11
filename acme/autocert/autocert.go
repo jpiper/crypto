@@ -326,32 +326,23 @@ func supportsECDSA(hello *tls.ClientHelloInfo) bool {
 	// The "signature_algorithms" extension, if present, limits the key exchange
 	// algorithms allowed by the cipher suites. See RFC 5246, section 7.4.1.4.1.
 	if hello.SignatureSchemes != nil {
-		ecdsaOK := false
-	schemeLoop:
 		for _, scheme := range hello.SignatureSchemes {
 			const tlsECDSAWithSHA1 tls.SignatureScheme = 0x0203 // constant added in Go 1.10
 			switch scheme {
 			case tlsECDSAWithSHA1, tls.ECDSAWithP256AndSHA256,
 				tls.ECDSAWithP384AndSHA384, tls.ECDSAWithP521AndSHA512:
-				ecdsaOK = true
-				break schemeLoop
+				return true
 			}
 		}
-		if !ecdsaOK {
-			return false
-		}
+		return false
 	}
 	if hello.SupportedCurves != nil {
-		ecdsaOK := false
 		for _, curve := range hello.SupportedCurves {
 			if curve == tls.CurveP256 {
-				ecdsaOK = true
-				break
+				return true
 			}
 		}
-		if !ecdsaOK {
-			return false
-		}
+		return false
 	}
 	for _, suite := range hello.CipherSuites {
 		switch suite {
